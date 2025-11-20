@@ -1,32 +1,40 @@
-import { useState } from 'react';
-import { Upload, Shirt, Store, X } from 'lucide-react';
-import { Button } from './ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import clothingImage1 from 'figma:asset/ec478afec06191b2977f327968ed199408d44f63.png';
-import clothingImage2 from 'figma:asset/6ad04ccc7deac17b00da7fbc8a58809c89be3c76.png';
-import clothingImage3 from 'figma:asset/63adf4a627db81a79b1ab86c04939a51c413a6a9.png';
-import clothingImage4 from 'figma:asset/43a67d99ab47deecf1dc27c872d2cd85dd380886.png';
-import clothingImage5 from 'figma:asset/884d053c36061a0f37171a128e81b956b1c9d1f4.png';
-import clothingImage6 from 'figma:asset/80114a8eb1bcabdf0ab0d31d4e3ca107ee35b761.png';
-import clothingImage7 from 'figma:asset/613f3527ccbd7ed333879dcb09b10246a2ad7bb4.png';
-import clothingImage8 from 'figma:asset/2124db1344945b0e12af4fca5be4f71f97f29798.png';
-import clothingImage9 from 'figma:asset/ebbe1f21d3220ac41756975ddc57530257d5d3d5.png';
+// src/components/ClothingSelection.tsx
+import { useState } from "react";
+import { Upload, Shirt, Store, X } from "lucide-react";
+import { Button } from "./ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import clothingImage1 from "figma:asset/ec478afec06191b2977f327968ed199408d44f63.png";
+import clothingImage2 from "figma:asset/6ad04ccc7deac17b00da7fbc8a58809c89be3c76.png";
+import clothingImage3 from "figma:asset/63adf4a627db81a79b1ab86c04939a51c413a6a9.png";
+import clothingImage4 from "figma:asset/43a67d99ab47deecf1dc27c872d2cd85dd380886.png";
+import clothingImage5 from "figma:asset/884d053c36061a0f37171a128e81b956b1c9d1f4.png";
+import clothingImage6 from "figma:asset/80114a8eb1bcabdf0ab0d31d4e3ca107ee35b761.png";
+import clothingImage7 from "figma:asset/613f3527ccbd7ed333879dcb09b10246a2ad7bb4.png";
+import clothingImage8 from "figma:asset/2124db1344945b0e12af4fca5be4f71f97f29798.png";
+import clothingImage9 from "figma:asset/ebbe1f21d3220ac41756975ddc57530257d5d3d5.png";
+
+// App.tsx 의 UploadedItem 과 같은 구조
+interface UploadedItem {
+  id: number;      // 백엔드 photo_id
+  preview: string; // 미리보기 URL
+}
 
 interface ClothingSelectionProps {
   clothingImage: string | null;
   setClothingImage: (image: string | null) => void;
-  uploadedClothes: string[];
-  onClothingUpload: (file: File, previewUrl: string) => void; // 🔴 수정
+  uploadedClothes: UploadedItem[];
+  onClothingUpload: (file: File, previewUrl: string) => void;
   onDeleteClothing: (index: number) => void;
+  onSelectClothing: (index: number) => void; // ✅ 추가
 }
 
-
-export function ClothingSelection({ 
-  clothingImage, 
-  setClothingImage, 
-  uploadedClothes, 
+export function ClothingSelection({
+  clothingImage,
+  setClothingImage,
+  uploadedClothes,
   onClothingUpload,
-  onDeleteClothing
+  onDeleteClothing,
+  onSelectClothing,
 }: ClothingSelectionProps) {
   const [sampleClothes] = useState<string[]>([
     clothingImage1,
@@ -55,7 +63,7 @@ export function ClothingSelection({
   return (
     <div className="bg-white border-2 border-gray-300 rounded-lg p-6">
       <h2 className="text-xl mb-4">2. 의류 선택</h2>
-      
+
       <Tabs defaultValue="uploaded" className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-4">
           <TabsTrigger value="uploaded" className="flex items-center gap-2">
@@ -75,7 +83,11 @@ export function ClothingSelection({
             <div className="flex-shrink-0">
               <div className="w-48 h-64 border-2 border-gray-300 rounded-lg flex flex-col items-center justify-center bg-gray-50 relative overflow-hidden">
                 {clothingImage ? (
-                  <img src={clothingImage} alt="Selected clothing" className="w-full h-full object-cover" />
+                  <img
+                    src={clothingImage}
+                    alt="Selected clothing"
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
                   <>
                     <Shirt className="w-16 h-16 text-gray-300 mb-4" />
@@ -108,15 +120,24 @@ export function ClothingSelection({
               </div>
               {uploadedClothes.length > 0 ? (
                 <div className="grid grid-cols-3 gap-2 max-h-[280px] overflow-y-auto pr-2">
-                  {uploadedClothes.map((clothing, idx) => (
+                  {uploadedClothes.map((item, idx) => (
                     <div
-                      key={idx}
-                      onClick={() => setClothingImage(clothing)}
+                      key={item.id}
+                      onClick={() => {
+                        setClothingImage(item.preview);
+                        onSelectClothing(idx); // ✅ 선택하면 App.tsx 쪽 clothPhotoId 도 변경
+                      }}
                       className={`aspect-[3/4] border-2 rounded cursor-pointer transition-all hover:border-blue-500 relative group ${
-                        clothingImage === clothing ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-300'
+                        clothingImage === item.preview
+                          ? "border-blue-500 ring-2 ring-blue-200"
+                          : "border-gray-300"
                       }`}
                     >
-                      <img src={clothing} alt={`Uploaded clothing ${idx + 1}`} className="w-full h-full object-cover rounded" />
+                      <img
+                        src={item.preview}
+                        alt={`Uploaded clothing ${idx + 1}`}
+                        className="w-full h-full object-cover rounded"
+                      />
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -147,17 +168,23 @@ export function ClothingSelection({
             <div className="flex-shrink-0">
               <div className="w-48 h-64 border-2 border-gray-300 rounded-lg flex flex-col items-center justify-center bg-gray-50 relative overflow-hidden">
                 {clothingImage ? (
-                  <img src={clothingImage} alt="Selected clothing" className="w-full h-full object-cover" />
+                  <img
+                    src={clothingImage}
+                    alt="Selected clothing"
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
                   <>
                     <Store className="w-16 h-16 text-gray-300 mb-4" />
-                    <p className="text-sm text-gray-500 text-center px-4">상품을 선택하세요</p>
+                    <p className="text-sm text-gray-500 text-center px-4">
+                      상품을 선택하세요
+                    </p>
                   </>
                 )}
               </div>
             </div>
 
-            {/* Sample Clothes from Shop */}
+            {/* Sample Clothes from Shop (프론트 데모용, 백엔드 id 없음) */}
             <div className="flex-1">
               <div className="mb-2">
                 <span className="text-sm">쇼핑몰 상품</span>
@@ -168,10 +195,16 @@ export function ClothingSelection({
                     key={idx}
                     onClick={() => setClothingImage(clothing)}
                     className={`aspect-[3/4] border-2 rounded cursor-pointer transition-all hover:border-blue-500 ${
-                      clothingImage === clothing ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-300'
+                      clothingImage === clothing
+                        ? "border-blue-500 ring-2 ring-blue-200"
+                        : "border-gray-300"
                     }`}
                   >
-                    <img src={clothing} alt={`Shop item ${idx + 1}`} className="w-full h-full object-cover rounded" />
+                    <img
+                      src={clothing}
+                      alt={`Shop item ${idx + 1}`}
+                      className="w-full h-full object-cover rounded"
+                    />
                   </div>
                 ))}
               </div>

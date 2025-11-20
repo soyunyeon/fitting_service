@@ -1,17 +1,29 @@
-import { useState } from 'react';
-import { Upload, User, X } from 'lucide-react';
-import { Button } from './ui/button';
+// src/components/ModelSelection.tsx
+import { Upload, User, X } from "lucide-react";
+import { Button } from "./ui/button";
+
+interface UploadedItem {
+  id: number;      // 백엔드 photo_id
+  preview: string; // 미리보기 이미지 URL
+}
 
 interface ModelSelectionProps {
   modelImage: string | null;
   setModelImage: (image: string | null) => void;
-  uploadedModels: string[];
-  onModelUpload: (file: File, previewUrl: string) => void; // 🔴 수정
+  uploadedModels: UploadedItem[];
+  onModelUpload: (file: File, previewUrl: string) => void;
   onDeleteModel: (index: number) => void;
+  onSelectModel: (index: number) => void; // ✅ 추가
 }
 
-
-export function ModelSelection({ modelImage, setModelImage, uploadedModels, onModelUpload, onDeleteModel }: ModelSelectionProps) {
+export function ModelSelection({
+  modelImage,
+  setModelImage,
+  uploadedModels,
+  onModelUpload,
+  onDeleteModel,
+  onSelectModel,
+}: ModelSelectionProps) {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -27,13 +39,17 @@ export function ModelSelection({ modelImage, setModelImage, uploadedModels, onMo
   return (
     <div className="bg-white border-2 border-gray-300 rounded-lg p-6">
       <h2 className="text-xl mb-4">1. 모델 선택</h2>
-      
+
       <div className="flex gap-4">
         {/* Upload Area */}
         <div className="flex-shrink-0">
           <div className="w-48 h-64 border-2 border-gray-300 rounded-lg flex flex-col items-center justify-center bg-gray-50 relative overflow-hidden">
             {modelImage ? (
-              <img src={modelImage} alt="Selected model" className="w-full h-full object-cover" />
+              <img
+                src={modelImage}
+                alt="Selected model"
+                className="w-full h-full object-cover"
+              />
             ) : (
               <>
                 <User className="w-16 h-16 text-gray-300 mb-4" />
@@ -66,15 +82,24 @@ export function ModelSelection({ modelImage, setModelImage, uploadedModels, onMo
           </div>
           {uploadedModels.length > 0 ? (
             <div className="grid grid-cols-3 gap-2 max-h-[280px] overflow-y-auto pr-2">
-              {uploadedModels.map((model, idx) => (
+              {uploadedModels.map((item, idx) => (
                 <div
-                  key={idx}
-                  onClick={() => setModelImage(model)}
+                  key={item.id}
+                  onClick={() => {
+                    setModelImage(item.preview);
+                    onSelectModel(idx); // ✅ 선택하면 App.tsx 쪽 personPhotoId도 변경
+                  }}
                   className={`aspect-[3/4] border-2 rounded cursor-pointer transition-all hover:border-blue-500 relative group ${
-                    modelImage === model ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-300'
+                    modelImage === item.preview
+                      ? "border-blue-500 ring-2 ring-blue-200"
+                      : "border-gray-300"
                   }`}
                 >
-                  <img src={model} alt={`Uploaded model ${idx + 1}`} className="w-full h-full object-cover rounded" />
+                  <img
+                    src={item.preview}
+                    alt={`Uploaded model ${idx + 1}`}
+                    className="w-full h-full object-cover rounded"
+                  />
                   <button
                     onClick={(e) => {
                       e.stopPropagation();

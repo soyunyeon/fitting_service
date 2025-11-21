@@ -1,0 +1,16 @@
+# Node.js/npm
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# TypeScript
+dist/
+build/
+*.js
+*.js.map
+*.tsbuildinfo
+
+# IDE 및 OS 특정 파일
+.idea/
+.vscode/
+.DS_Store

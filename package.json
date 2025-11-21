@@ -1,6 +1,6 @@
 
   {
-      "name": "Online Virtual Fitting Service (복사)",
+      "name": "Virtual Fitting Service Prototype",
       "version": "0.1.0",
       "private": true,
       "dependencies": {

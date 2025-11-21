@@ -17,6 +17,15 @@
         'next-themes@0.4.6': 'next-themes',
         'lucide-react@0.487.0': 'lucide-react',
         'input-otp@1.4.2': 'input-otp',
+        'figma:asset/ec478afec06191b2977f327968ed199408d44f63.png': path.resolve(__dirname, './src/assets/ec478afec06191b2977f327968ed199408d44f63.png'),
+        'figma:asset/ebbe1f21d3220ac41756975ddc57530257d5d3d5.png': path.resolve(__dirname, './src/assets/ebbe1f21d3220ac41756975ddc57530257d5d3d5.png'),
+        'figma:asset/884d053c36061a0f37171a128e81b956b1c9d1f4.png': path.resolve(__dirname, './src/assets/884d053c36061a0f37171a128e81b956b1c9d1f4.png'),
+        'figma:asset/80114a8eb1bcabdf0ab0d31d4e3ca107ee35b761.png': path.resolve(__dirname, './src/assets/80114a8eb1bcabdf0ab0d31d4e3ca107ee35b761.png'),
+        'figma:asset/6ad04ccc7deac17b00da7fbc8a58809c89be3c76.png': path.resolve(__dirname, './src/assets/6ad04ccc7deac17b00da7fbc8a58809c89be3c76.png'),
+        'figma:asset/63adf4a627db81a79b1ab86c04939a51c413a6a9.png': path.resolve(__dirname, './src/assets/63adf4a627db81a79b1ab86c04939a51c413a6a9.png'),
+        'figma:asset/613f3527ccbd7ed333879dcb09b10246a2ad7bb4.png': path.resolve(__dirname, './src/assets/613f3527ccbd7ed333879dcb09b10246a2ad7bb4.png'),
+        'figma:asset/43a67d99ab47deecf1dc27c872d2cd85dd380886.png': path.resolve(__dirname, './src/assets/43a67d99ab47deecf1dc27c872d2cd85dd380886.png'),
+        'figma:asset/2124db1344945b0e12af4fca5be4f71f97f29798.png': path.resolve(__dirname, './src/assets/2124db1344945b0e12af4fca5be4f71f97f29798.png'),
         'embla-carousel-react@8.6.0': 'embla-carousel-react',
         'cmdk@1.1.1': 'cmdk',
         'class-variance-authority@0.7.1': 'class-variance-authority',
@@ -51,18 +60,10 @@
     },
     build: {
       target: 'esnext',
-      outDir: 'build',
+      outDir: 'dist',
     },
     server: {
       port: 3000,
       open: true,
-      proxy: {
-        '^/api': {
-          target: 'http://first-pharmacies.gl.at.ply.gg:6644',
-          changeOrigin: true,
-          // 백엔드가 /api 프리픽스가 없으니 그대로 전달
-          rewrite: (path) => path.replace(/^\/api/, ""),
-      },
-    },
     },
   });

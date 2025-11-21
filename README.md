@@ -1,7 +1,7 @@
 
-  # Online Virtual Fitting Service (복사)
+  # Virtual Fitting Service Prototype
 
-  This is a code bundle for Online Virtual Fitting Service (복사). The original project is available at https://www.figma.com/design/fYNIuQ296aasExi0Po1w3E/Online-Virtual-Fitting-Service--%EB%B3%B5%EC%82%AC-.
+  This is a code bundle for Virtual Fitting Service Prototype. The original project is available at https://www.figma.com/design/j3Pkk4aGLu6iX2HDqlmu8l/Virtual-Fitting-Service-Prototype.
 
   ## Running the code
 

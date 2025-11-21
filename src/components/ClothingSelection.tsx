@@ -26,6 +26,7 @@ interface ClothingSelectionProps {
   onClothingUpload: (file: File, previewUrl: string) => void;
   onDeleteClothing: (index: number) => void;
   onSelectClothing: (index: number) => void; // ✅ 추가
+  onSelectShopClothing?: (imageUrl: string) => void;
 }
 
 export function ClothingSelection({
@@ -35,6 +36,7 @@ export function ClothingSelection({
   onClothingUpload,
   onDeleteClothing,
   onSelectClothing,
+  onSelectShopClothing,
 }: ClothingSelectionProps) {
   const [sampleClothes] = useState<string[]>([
     clothingImage1,
@@ -193,7 +195,14 @@ export function ClothingSelection({
                 {sampleClothes.map((clothing, idx) => (
                   <div
                     key={idx}
-                    onClick={() => setClothingImage(clothing)}
+                    onClick={() => {
+                      // 1) 프론트에서 선택된 의류 이미지 상태 변경 (파란 테두리용)
+                      setClothingImage(clothing);
+
+                      // 2) 선택한 쇼핑몰 이미지를 서버에 업로드해서 cloth_photo_id 만들기
+                      //    (App.tsx에서 넘겨준 handleSelectShopClothing 호출)
+                      onSelectShopClothing?.(clothing);   // ❗ ?. 로 안전하게
+                    }}
                     className={`aspect-[3/4] border-2 rounded cursor-pointer transition-all hover:border-blue-500 ${
                       clothingImage === clothing
                         ? "border-blue-500 ring-2 ring-blue-200"

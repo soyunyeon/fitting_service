@@ -122,6 +122,32 @@ export async function uploadClothPhoto(
   return handleJson<UploadResponse>(res);
 }
 
+// ------사진 삭제 ----------
+export async function deletePhoto(
+  category: "person" | "cloth",
+  id: number,
+  token: string
+) {
+  const res = await fetch(`${API_BASE_URL}/admin/photos/${category}/${id}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!res.ok) {
+    let msg = `${res.status}`;
+    try {
+      const data = await res.json();
+      msg += ` ${JSON.stringify(data)}`;
+    } catch {
+      // ignore
+    }
+    throw new Error(`사진 삭제 실패 (${category}/${id}): ${msg}`);
+  }
+}
+
+
 // ----- 가상 시착 요청: /tryon -----
 export async function requestTryon(
   payload: TryonRequestPayload,

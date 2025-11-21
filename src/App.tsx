@@ -12,6 +12,7 @@ import {
   uploadClothPhoto,
   requestTryon,
   getResultImageUrl,
+  deletePhoto, // ⭐ 서버 사진 삭제 함수 추가
 } from "./lib/api";
 
 interface TryOnHistory {
@@ -151,27 +152,82 @@ export default function App() {
     setClothPhotoId(item.id); // ✅ 선택한 의류의 id로 교체
   };
 
-  // 삭제 핸들러
-  const handleDeleteModel = (index: number) => {
-    const itemToDelete = uploadedModels[index];
-    setUploadedModels((prev) => prev.filter((_, i) => i !== index));
+  // shop 이미지를 cloth로 등록하는 헬퍼 (dataURL이나 blob 변환 필요)
+const handleSelectShopClothing = async (imageUrl: string) => {
+  if (!token) {
+    alert("로그인 후 이용해주세요.");
+    return;
+  }
 
-    // 삭제한 모델이 현재 선택된 모델이면 선택 해제
-    if (itemToDelete && modelImage === itemToDelete.preview) {
-      setModelImage(null);
-      setPersonPhotoId(null);
-    }
-  };
+  // imageUrl -> Blob 변환 (fetch 후 blob())
+  const res = await fetch(imageUrl);
+  const blob = await res.blob();
+  const file = new File([blob], "shop-cloth.png", { type: blob.type });
 
-  const handleDeleteClothing = (index: number) => {
-    const itemToDelete = uploadedClothes[index];
-    setUploadedClothes((prev) => prev.filter((_, i) => i !== index));
+  try {
+    const uploaded = await uploadClothPhoto(file, token);
+    setClothingImage(imageUrl);
+    setClothPhotoId(uploaded.id);
+  } catch (e) {
+    console.error(e);
+    alert("쇼핑몰 의류 등록 실패: " + (e as Error).message);
+  }
+};
 
-    if (itemToDelete && clothingImage === itemToDelete.preview) {
-      setClothingImage(null);
-      setClothPhotoId(null);
-    }
-  };
+
+  // ----- 삭제 핸들러 -----
+
+const handleDeleteModel = async (index: number) => {
+  const itemToDelete = uploadedModels[index];
+  if (!itemToDelete) return;
+
+  if (!token) {
+    alert("로그인 후 삭제할 수 있습니다.");
+    return;
+  }
+
+  try {
+    await deletePhoto("person", itemToDelete.id, token);
+  } catch (e) {
+    console.error("서버 사람 사진 삭제 실패:", e);
+    alert("사진을 삭제할 권한이 없습니다. (관리자만 삭제 가능)");
+    return; // ❗ 여기서 UI 변경하지 않고 종료
+  }
+
+  // 여기까지 왔다는 건 진짜 서버에서 삭제 성공
+  setUploadedModels((prev) => prev.filter((_, i) => i !== index));
+
+  if (modelImage === itemToDelete.preview) {
+    setModelImage(null);
+    setPersonPhotoId(null);
+  }
+};
+
+const handleDeleteClothing = async (index: number) => {
+  const itemToDelete = uploadedClothes[index];
+  if (!itemToDelete) return;
+
+  if (!token) {
+    alert("로그인 후 삭제할 수 있습니다.");
+    return;
+  }
+
+  try {
+    await deletePhoto("cloth", itemToDelete.id, token);
+  } catch (e) {
+    console.error("서버 옷 사진 삭제 실패:", e);
+    alert("사진을 삭제할 권한이 없습니다. (관리자만 삭제 가능)");
+    return; // ❗ 마찬가지로 UI 변경 X
+  }
+
+  setUploadedClothes((prev) => prev.filter((_, i) => i !== index));
+
+  if (clothingImage === itemToDelete.preview) {
+    setClothingImage(null);
+    setClothPhotoId(null);
+  }
+};
+
 
   // ----- 가상시착 요청 -----
 
@@ -277,6 +333,7 @@ export default function App() {
               onClothingUpload={handleClothingUpload}
               onDeleteClothing={handleDeleteClothing}
               onSelectClothing={handleSelectClothing} // ✅ 선택 시 id도 함께 변경
+              onSelectShopClothing={handleSelectShopClothing}
             />
           </div>
 

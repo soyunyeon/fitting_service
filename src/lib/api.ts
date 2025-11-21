@@ -14,6 +14,7 @@ export interface UserInfo {
   name?: string;
   google_id?: string;
   profile_image?: string;
+  credits?: number; // Added for Zustand store
   // 백엔드에서 추가로 내려주면 알아서 붙음
   [key: string]: any;
 }

@@ -1,6 +1,6 @@
 // src/pages/Home.tsx
 import { useState } from "react";
-import { useUser } from "../App"; // 👈 상위 App에서 정의한 useUser 훅 임포트
+import { useAuthStore } from "../store/useAuthStore"; // 👈 Zustand 스토어 임포트
 import { ModelSelection } from "../components/ModelSelection";
 import { ClothingSelection } from "../components/ClothingSelection";
 import { TryOnResult } from "../components/TryOnResult";
@@ -26,7 +26,8 @@ interface UploadedItem {
 }
 
 export default function Home() {
-  const { token, userId } = useUser(); // 👈 컨텍스트에서 token과 userId 가져오기
+  const { token, userInfo } = useAuthStore(); // 👈 Zustand 스토어 사용
+  const userId = userInfo?.id ?? null; // userInfo에서 id 추출
 
   const [modelImage, setModelImage] = useState<string | null>(null);
   const [clothingImage, setClothingImage] = useState<string | null>(null);

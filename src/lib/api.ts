@@ -12,6 +12,8 @@ export interface UserInfo {
   email?: string;
   username?: string;
   name?: string;
+  google_id?: string;
+  profile_image?: string;
   // 백엔드에서 추가로 내려주면 알아서 붙음
   [key: string]: any;
 }

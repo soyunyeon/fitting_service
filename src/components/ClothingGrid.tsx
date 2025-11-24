@@ -1,11 +1,12 @@
+import { useMemo } from "react";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 
-interface ClothingItem {
+export interface ClothingItem {
   id: string;
-  productId: number;
+  productId?: number;
   name: string;
   category: string;
   imageUrl: string;
@@ -17,17 +18,13 @@ interface ClothingItem {
 interface ClothingGridProps {
   selectedItems: ClothingItem[];
   onItemSelect: (item: ClothingItem) => void;
+  customItems?: ClothingItem[];
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  tops: '상의',
-  bottoms: '하의',
-  shoes: '신발',
-  accessories: '액세서리'
-};
 
-export function ClothingGrid({ selectedItems, onItemSelect }: ClothingGridProps) {
-  const clothingItems: Record<string, ClothingItem[]> = {
+
+export function ClothingGrid({ selectedItems, onItemSelect, customItems }: ClothingGridProps) {
+  const defaultClothingItems: Record<string, ClothingItem[]> = {
     tops: [
       {
         id: 'navy-hoodie',
@@ -134,6 +131,30 @@ export function ClothingGrid({ selectedItems, onItemSelect }: ClothingGridProps)
     ]
   };
 
+  const clothingItems = useMemo(() => {
+    if (customItems && customItems.length > 0) {
+      const grouped: Record<string, ClothingItem[]> = {
+        tops: [],
+        bottoms: [],
+        shoes: [],
+        accessories: []
+      };
+      customItems.forEach(item => {
+        if (grouped[item.category]) {
+          grouped[item.category].push(item);
+        } else {
+          if (Object.keys(grouped).includes(item.category)) {
+             grouped[item.category].push(item);
+          } else {
+             grouped['tops'].push(item);
+          }
+        }
+      });
+      return grouped;
+    }
+    return defaultClothingItems;
+  }, [customItems]);
+
   const selectedItemIds = selectedItems.map(item => item.id);
 
   const renderItems = (items: ClothingItem[]) => (
@@ -178,40 +199,7 @@ export function ClothingGrid({ selectedItems, onItemSelect }: ClothingGridProps)
         <Badge variant="secondary">{selectedItems.length}개 장바구니에 담김</Badge>
       </div>
       
-      <Tabs defaultValue="all" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="all">전체</TabsTrigger>
-          <TabsTrigger value="tops">상의</TabsTrigger>
-          <TabsTrigger value="bottoms">하의</TabsTrigger>
-          <TabsTrigger value="shoes">신발</TabsTrigger>
-          <TabsTrigger value="accessories">액세서리</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="all" className="mt-4">
-          {Object.entries(clothingItems).map(([category, items]) => (
-            <div key={category} className="mb-8 last:mb-0">
-              <h4 className="mb-4">{CATEGORY_LABELS[category]}</h4>
-              {renderItems(items)}
-            </div>
-          ))}
-        </TabsContent>
-        
-        <TabsContent value="tops" className="mt-4">
-          {renderItems(clothingItems.tops)}
-        </TabsContent>
-        
-        <TabsContent value="bottoms" className="mt-4">
-          {renderItems(clothingItems.bottoms)}
-        </TabsContent>
-        
-        <TabsContent value="shoes" className="mt-4">
-          {renderItems(clothingItems.shoes)}
-        </TabsContent>
-        
-        <TabsContent value="accessories" className="mt-4">
-          {renderItems(clothingItems.accessories)}
-        </TabsContent>
-      </Tabs>
+      {renderItems(Object.values(clothingItems).flat())}
     </Card>
   );
 }

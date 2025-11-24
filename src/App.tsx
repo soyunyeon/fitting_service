@@ -10,6 +10,7 @@ import Shop from "./pages/Shop";
 import Navbar from "./components/Navbar";
 import { getMe } from "./lib/api";
 import { useAuthStore } from "./store/useAuthStore"; // Import useAuthStore
+import { Toaster } from "./components/ui/sonner";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -64,6 +65,7 @@ function Layout() {
       <main>
         <Outlet />
       </main>
+      <Toaster />
     </div>
   );
 }

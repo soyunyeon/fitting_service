@@ -26,6 +26,14 @@ export interface UploadResponse {
   [key: string]: any;
 }
 
+export interface ShopImageResponse {
+  id: number;
+  filename: string;
+  user_id: number;
+  uploaded_at: string;
+  created_at?: string | null;
+}
+
 export interface TryonRequestPayload {
   user_id: number;
   person_photo_id: number;
@@ -172,3 +180,13 @@ export async function requestTryon(
 export function getResultImageUrl(filename: string): string {
   return `${API_BASE_URL}/results/image/${encodeURIComponent(filename)}`;
 }
+
+export async function getShopClothes(): Promise<ShopImageResponse[]> {
+  const res = await fetch(`${API_BASE_URL}/images/shop-clothes`);
+  return handleJson<ShopImageResponse[]>(res);
+}
+
+export function getShopClothImageUrl(filename: string): string {
+  return `${API_BASE_URL}/images/clothes/${encodeURIComponent(filename)}`;
+}
+

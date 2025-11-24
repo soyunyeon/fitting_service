@@ -22,7 +22,7 @@ const Navbar: React.FC<{ API_BASE_URL: string }> = ({ API_BASE_URL }) => {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-2">
+    <header className="fixed top-0 left-0 right-0 z-50 w-full bg-white border-b border-gray-200 px-6 py-2">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-4"> {/* New container for left group */}
           <Link to="/">
@@ -63,6 +63,7 @@ const Navbar: React.FC<{ API_BASE_URL: string }> = ({ API_BASE_URL }) => {
                     <img
                       src={userInfo.profile_image}
                       alt="User Profile"
+                      referrerPolicy="no-referrer"
                       className="w-10 h-10 rounded-full object-cover cursor-pointer hover:opacity-80 transition"
                     />
                   ) : (

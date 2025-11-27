@@ -131,7 +131,7 @@ export default function Shop() {
         cloth_photo_id: currentClothPhotoId
       }, token);
 
-      const url = getResultImageUrl(res.result_filename);
+      const url = res.result_url || getResultImageUrl(res.result_filename);
       setResultImage(url);
       toast.success("가상 시착 완료!");
     } catch (e) {

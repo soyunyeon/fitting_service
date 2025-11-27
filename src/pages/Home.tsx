@@ -16,7 +16,7 @@ interface TryOnHistory {
   id: string;
   modelImage: string;
   clothingImage: string;
-  resultImage: string;
+  resultImage: { filename: string; url: string };
   timestamp: Date;
 }
 
@@ -31,7 +31,7 @@ export default function Home() {
 
   const [modelImage, setModelImage] = useState<string | null>(null);
   const [clothingImage, setClothingImage] = useState<string | null>(null);
-  const [resultImage, setResultImage] = useState<string | null>(null);
+  const [resultImage, setResultImage] = useState<{ filename: string; url: string } | null>(null);
 
   const [uploadedModels, setUploadedModels] = useState<UploadedItem[]>([]);
   const [uploadedClothes, setUploadedClothes] = useState<UploadedItem[]>([]);
@@ -147,13 +147,19 @@ export default function Home() {
             { user_id: userId, person_photo_id: personPhotoId, cloth_photo_id: clothPhotoId },
             token
           );
-          const url = getResultImageUrl(res.result_filename);
-          setResultImage(url);
+          
+          const resultObj = {
+            filename: res.result_filename,
+            url: res.result_url || getResultImageUrl(res.result_filename)
+          };
+          
+          setResultImage(resultObj);
+          
           const newHistory: TryOnHistory = {
             id: Date.now().toString(),
             modelImage: modelImage!,
             clothingImage: clothingImage!,
-            resultImage: url,
+            resultImage: resultObj,
             timestamp: new Date(),
           };
           setTryOnHistory((prev) => [newHistory, ...prev]);

@@ -8,12 +8,12 @@ interface TryOnHistory {
   id: string;
   modelImage: string;
   clothingImage: string;
-  resultImage: string;
+  resultImage: { filename: string; url: string };
   timestamp: Date;
 }
 
 interface TryOnResultProps {
-  resultImage: string | null;
+  resultImage: { filename: string; url: string } | null;
   onGenerate: () => void;
   hasRequiredImages: boolean;
   history: TryOnHistory[];
@@ -26,7 +26,17 @@ export function TryOnResult({ resultImage, onGenerate, hasRequiredImages, histor
   };
 
   const handleDownload = () => {
-    toast.success('이미지가 저장되었습니다!');
+    if (resultImage) {
+      const link = document.createElement('a');
+      link.href = resultImage.url;
+      link.download = resultImage.filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success(`'${resultImage.filename}' 이미지가 저장되었습니다!`);
+    } else {
+      toast.error('다운로드할 이미지가 없습니다.');
+    }
   };
 
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
@@ -40,7 +50,7 @@ export function TryOnResult({ resultImage, onGenerate, hasRequiredImages, histor
         {resultImage ? (
           <div className="flex justify-center">
             <img 
-              src={resultImage} 
+              src={resultImage.url} 
               alt="Try-on result" 
               className="rounded-lg"
             />
@@ -101,26 +111,12 @@ export function TryOnResult({ resultImage, onGenerate, hasRequiredImages, histor
                   key={item.id}
                   className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow"
                 >
-                  <div className="flex gap-3">
-                    <div className="w-16 h-20 flex-shrink-0 border border-gray-200 rounded overflow-hidden">
-                      <img 
-                        src={item.modelImage} 
-                        alt="Model" 
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="w-16 h-20 flex-shrink-0 border border-gray-200 rounded overflow-hidden">
-                      <img 
-                        src={item.clothingImage} 
-                        alt="Clothing" 
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
+                  <div className="flex gap-3 justify-center items-center">
                     <Dialog>
                       <DialogTrigger asChild>
                         <div className="w-16 h-20 flex-shrink-0 border border-gray-200 rounded overflow-hidden cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all">
                           <img 
-                            src={item.resultImage} 
+                          src={item.resultImage.url} 
                             alt="Result" 
                             className="w-full h-full object-cover"
                           />
@@ -128,7 +124,7 @@ export function TryOnResult({ resultImage, onGenerate, hasRequiredImages, histor
                       </DialogTrigger>
                       <DialogContent className="max-w-4xl">
                         <img 
-                          src={item.resultImage} 
+                          src={item.resultImage.url} 
                           alt="Result enlarged" 
                           className="w-full h-auto object-contain max-h-[80vh]"
                         />

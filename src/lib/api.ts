@@ -42,6 +42,7 @@ export interface TryonRequestPayload {
 
 export interface TryonResponse {
   result_filename: string;
+  result_url?: string; // Added result_url
   [key: string]: any;
 }
 

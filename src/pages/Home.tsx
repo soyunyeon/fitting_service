@@ -1,6 +1,6 @@
 // src/pages/Home.tsx
-import { useState } from "react";
-import { useAuthStore } from "../store/useAuthStore"; // 👈 Zustand 스토어 임포트
+import { useState, useEffect } from "react";
+import { useAuthStore } from "../store/useAuthStore";
 import { ModelSelection } from "../components/ModelSelection";
 import { ClothingSelection } from "../components/ClothingSelection";
 import { TryOnResult } from "../components/TryOnResult";
@@ -10,6 +10,8 @@ import {
   requestTryon,
   getResultImageUrl,
   deletePhoto,
+  getUploadedPersonPhotos,
+  getUploadedClothPhotos,
 } from "../lib/api";
 
 interface TryOnHistory {
@@ -23,11 +25,12 @@ interface TryOnHistory {
 interface UploadedItem {
   id: number;
   preview: string;
+  originalFile?: File;
 }
 
 export default function Home() {
-  const { token, userInfo } = useAuthStore(); // 👈 Zustand 스토어 사용
-  const userId = userInfo?.id ?? null; // userInfo에서 id 추출
+  const { token, userInfo } = useAuthStore();
+  const userId = userInfo?.id ?? null;
 
   const [modelImage, setModelImage] = useState<string | null>(null);
   const [clothingImage, setClothingImage] = useState<string | null>(null);
@@ -40,6 +43,40 @@ export default function Home() {
   
   const [personPhotoId, setPersonPhotoId] = useState<number | null>(null);
   const [clothPhotoId, setClothPhotoId] = useState<number | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false); // New state variable
+
+  // Fetch previously uploaded photos (persons and clothes)
+  useEffect(() => {
+    if (token) {
+      const fetchUploadedItems = async () => {
+        try {
+          // Fetch person photos
+          const personPhotos = await getUploadedPersonPhotos(token);
+          const models: UploadedItem[] = personPhotos.map(photo => ({
+            id: photo.id,
+            preview: photo.image_url, 
+          }));
+          setUploadedModels(models);
+
+          // Fetch cloth photos
+          const clothPhotos = await getUploadedClothPhotos(token);
+          const clothes: UploadedItem[] = clothPhotos.map(photo => ({
+            id: photo.id,
+            preview: photo.image_url,
+          }));
+          setUploadedClothes(clothes);
+
+        } catch (error) {
+          console.error("Failed to fetch uploaded photos:", error);
+        }
+      };
+      fetchUploadedItems();
+    } else {
+      setUploadedModels([]);
+      setUploadedClothes([]);
+    }
+  }, [token]);
+
 
   const handleModelUpload = async (file: File, preview: string) => {
     if (!token) {
@@ -48,9 +85,9 @@ export default function Home() {
     }
     try {
       const uploaded = await uploadPersonPhoto(file, token);
-      const newItem: UploadedItem = { id: uploaded.id, preview };
+      const newItem: UploadedItem = { id: uploaded.id, preview: uploaded.url || preview };
       setUploadedModels((prev) => [newItem, ...prev]);
-      setModelImage(preview);
+      setModelImage(newItem.preview);
       setPersonPhotoId(uploaded.id);
     } catch (e) {
       console.error(e);
@@ -65,9 +102,9 @@ export default function Home() {
     }
     try {
       const uploaded = await uploadClothPhoto(file, token);
-      const newItem: UploadedItem = { id: uploaded.id, preview };
+      const newItem: UploadedItem = { id: uploaded.id, preview: uploaded.url || preview };
       setUploadedClothes((prev) => [newItem, ...prev]);
-      setClothingImage(preview);
+      setClothingImage(newItem.preview);
       setClothPhotoId(uploaded.id);
     } catch (e) {
       console.error(e);
@@ -99,7 +136,7 @@ export default function Home() {
     const file = new File([blob], "shop-cloth.png", { type: blob.type });
     try {
       const uploaded = await uploadClothPhoto(file, token);
-      setClothingImage(imageUrl);
+      setClothingImage(uploaded.url || imageUrl);
       setClothPhotoId(uploaded.id);
     } catch (e) {
       console.error(e);
@@ -142,6 +179,7 @@ export default function Home() {
   const handleGenerateResult = () => {
     if (token && userId != null && personPhotoId != null && clothPhotoId != null) {
       (async () => {
+        setIsGenerating(true); // Set loading state to true
         try {
           const res = await requestTryon(
             { user_id: userId, person_photo_id: personPhotoId, cloth_photo_id: clothPhotoId },
@@ -166,6 +204,8 @@ export default function Home() {
         } catch (e) {
           console.error(e);
           alert("가상 시착 요청 실패: " + (e as Error).message);
+        } finally {
+          setIsGenerating(false); // Always set loading state to false
         }
       })();
     } else {
@@ -208,6 +248,7 @@ export default function Home() {
               hasRequiredImages={!!(modelImage && clothingImage)}
               history={tryOnHistory}
               onDeleteHistory={handleDeleteHistory}
+              isGenerating={isGenerating} // Pass isGenerating prop
             />
           </div>
         </div>

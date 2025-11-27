@@ -1,6 +1,6 @@
-import { Sparkles, Share2, Download, History, Trash2 } from 'lucide-react';
+import { Sparkles, Share2, Download, History, Trash2, Loader2 } from 'lucide-react'; // Added Loader2
 import { Button } from './ui/button';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner'; // Adjusted toast import based on common practice
 import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
 import { useState } from 'react';
 
@@ -18,9 +18,10 @@ interface TryOnResultProps {
   hasRequiredImages: boolean;
   history: TryOnHistory[];
   onDeleteHistory: (id: string) => void;
+  isGenerating: boolean; // New prop
 }
 
-export function TryOnResult({ resultImage, onGenerate, hasRequiredImages, history, onDeleteHistory }: TryOnResultProps) {
+export function TryOnResult({ resultImage, onGenerate, hasRequiredImages, history, onDeleteHistory, isGenerating }: TryOnResultProps) {
   const handleShare = () => {
     toast.success('공유 링크가 복사되었습니다!');
   };
@@ -48,11 +49,11 @@ export function TryOnResult({ resultImage, onGenerate, hasRequiredImages, histor
       <div className="space-y-4">
         {/* Result Display Area */}
         {resultImage ? (
-          <div className="flex justify-center">
+          <div className="flex justify-center items-center h-[400px] bg-gray-50 rounded-lg border-2 border-gray-300">
             <img 
               src={resultImage.url} 
               alt="Try-on result" 
-              className="rounded-lg"
+              className="rounded-lg max-w-full max-h-full object-contain"
             />
           </div>
         ) : (
@@ -69,11 +70,21 @@ export function TryOnResult({ resultImage, onGenerate, hasRequiredImages, histor
         <div className="border-2 border-gray-300 rounded-lg p-4 bg-white">
           <Button 
             onClick={onGenerate}
-            disabled={!hasRequiredImages}
+            disabled={!hasRequiredImages || isGenerating} // Disabled when generating
             className="w-full"
             size="lg"
           >
-            가상 시착 진행하기
+            {isGenerating ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                시착 중...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4 mr-2" />
+                가상 시착 진행하기
+              </>
+            )}
           </Button>
         </div>
 

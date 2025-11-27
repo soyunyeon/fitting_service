@@ -99,7 +99,7 @@ export async function uploadPersonPhoto(
 ): Promise<UploadResponse> {
   const formData = new FormData();
 
-  // ⚠️ FastAPI 스키마에서 file 필드 이름이 "file" 이라서 반드시 이렇게 넣어야 함
+  // ⚠️ FastAPI 스키마에서 file 필드 이름이 "file" 이라서 반드시 이렇게 넣어줘야 함
   formData.append("file", file);
 
   const res = await fetch(`${API_BASE_URL}/upload/person`, {
@@ -113,6 +113,30 @@ export async function uploadPersonPhoto(
   });
 
   return handleJson<UploadResponse>(res);
+}
+
+// ----- 사람 사진 목록 조회: /images/persons -----
+export async function getUploadedPersonPhotos(
+  token: string
+): Promise<ShopImageResponse[]> {
+  const res = await fetch(`${API_BASE_URL}/images/persons`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return handleJson<ShopImageResponse[]>(res);
+}
+
+// ----- 내 옷 사진 목록 조회: /images/my-clothes -----
+export async function getUploadedClothPhotos(
+  token: string
+): Promise<ShopImageResponse[]> {
+  const res = await fetch(`${API_BASE_URL}/images/my-clothes`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return handleJson<ShopImageResponse[]>(res);
 }
 
 // ----- 옷 사진 업로드: /upload/cloth -----

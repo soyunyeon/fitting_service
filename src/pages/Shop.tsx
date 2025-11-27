@@ -40,18 +40,18 @@ export default function Shop() {
         const shopImages = await getShopClothes();
         
         const items: ClothingItem[] = shopImages.map((image) => {
-          const filename = image.filename;
-          const lower = filename.toLowerCase();
           let category = 'tops';
-          if (lower.includes('pant') || lower.includes('jean') || lower.includes('skirt') || lower.includes('bottom') || lower.includes('trouser')) category = 'bottoms';
-          else if (lower.includes('shoe') || lower.includes('sneaker') || lower.includes('boot')) category = 'shoes';
-          else if (lower.includes('bag') || lower.includes('hat') || lower.includes('cap') || lower.includes('access')) category = 'accessories';
-
+          const type = (image.fitting_type || '').toLowerCase();
+          
+          if (type === 'lower' || type === 'bottom') category = 'bottoms';
+          else if (type === 'shoes') category = 'shoes';
+          else if (['bag', 'hat', 'accessory'].some(t => type.includes(t))) category = 'accessories';
+          
           return {
             id: image.id.toString(),
-            name: filename.replace(/\.[^/.]+$/, "").replace(/_/g, " "),
+            name: `상품 #${image.id}`,
             category,
-            imageUrl: getShopClothImageUrl(filename),
+            imageUrl: image.image_url,
             price: '가격 미정',
             brand: 'Shop Item',
           };
@@ -144,8 +144,9 @@ export default function Shop() {
   };
 
   return (
-    <div className="pt-20 max-w-7xl mx-auto px-6 py-8 min-h-screen bg-gray-50">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <div className="min-h-screen bg-gray-50">
+      <div className="pt-20 max-w-7xl mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* --- Left Column: Shop Items (8 cols) --- */}
         <div className="lg:col-span-8 space-y-6">
@@ -167,8 +168,8 @@ export default function Shop() {
 
         {/* --- Right Column: Compact TryOn (4 cols) --- */}
         <div className="lg:col-span-4">
-          <div className="sticky top-24 space-y-4">
-            <Card className="p-5 border-2 border-primary/10 shadow-lg bg-white">
+          <div className="sticky top-24 space-y-2">
+            <Card className="p-3 border-2 border-primary/10 shadow-lg bg-white">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-lg flex items-center">
                   <Sparkles className="w-5 h-5 mr-2 text-primary" />
@@ -233,7 +234,7 @@ export default function Shop() {
               </Button>
 
               {/* Result Display */}
-              <div className="mt-4 pt-4 border-t">
+              <div className="mt-2 pt-2 border-t">
                 <p className="text-xs font-medium text-gray-500 mb-2 text-center">시착 결과</p>
                 <div className="w-1/2 mx-auto">
                   {resultImage ? (
@@ -261,6 +262,7 @@ export default function Shop() {
           </div>
         </div>
 
+        </div>
       </div>
     </div>
   );

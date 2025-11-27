@@ -177,15 +177,7 @@ export function ClothingGrid({ selectedItems, onItemSelect, customItems }: Cloth
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="p-3">
-              <div className="flex items-start justify-between mb-1">
-                <h4 className="truncate">{item.name}</h4>
-                {isSelected && (
-                  <Badge className="ml-2">선택됨</Badge>
-                )}
-              </div>
-              <p className="text-muted-foreground mb-2">{item.brand}</p>
-            </div>
+
           </Card>
         );
       })}

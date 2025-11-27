@@ -28,9 +28,9 @@ export interface UploadResponse {
 
 export interface ShopImageResponse {
   id: number;
-  filename: string;
-  user_id: number;
-  uploaded_at: string;
+  image_url: string;
+  fitting_type: string;
+  uploaded_at?: string | null;
   created_at?: string | null;
 }
 

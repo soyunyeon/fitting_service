@@ -1,7 +1,7 @@
 import { Sparkles, Share2, Download, History, Trash2, Loader2 } from 'lucide-react'; // Added Loader2
 import { Button } from './ui/button';
 import { toast } from 'sonner'; // Adjusted toast import based on common practice
-import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
+import { Dialog, DialogContent, DialogTrigger, DialogFooter } from './ui/dialog';
 import { useState } from 'react';
 
 interface TryOnHistory {
@@ -22,8 +22,22 @@ interface TryOnResultProps {
 }
 
 export function TryOnResult({ resultImage, onGenerate, hasRequiredImages, history, onDeleteHistory, isGenerating }: TryOnResultProps) {
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success('이미지 링크가 클립보드에 복사되었습니다!');
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+      toast.error('링크 복사에 실패했습니다.');
+    }
+  };
+
   const handleShare = () => {
-    toast.success('공유 링크가 복사되었습니다!');
+    if (resultImage) {
+      copyToClipboard(resultImage.image_url);
+    } else {
+      toast.error('공유할 이미지가 없습니다.');
+    }
   };
 
   const handleDownload = () => {
@@ -130,12 +144,41 @@ export function TryOnResult({ resultImage, onGenerate, hasRequiredImages, histor
                         className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
                       />
                     </DialogTrigger>
-                    <DialogContent className="max-w-4xl">
-                      <img 
-                        src={item.resultImage.image_url} 
-                        alt="Result enlarged" 
-                        className="w-full h-auto object-contain max-h-[80vh]"
-                      />
+                    <DialogContent className="max-w-md">
+                      <div className="relative aspect-[3/4] w-full bg-gray-50 rounded-lg overflow-hidden mb-2">
+                        <img 
+                          src={item.resultImage.image_url} 
+                          alt="Result enlarged" 
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      <DialogFooter className="sm:justify-between gap-2">
+                        <Button 
+                          className="flex-1"
+                          variant="outline" 
+                          onClick={() => {
+                            copyToClipboard(item.resultImage.image_url);
+                          }}
+                        >
+                          <Share2 className="w-4 h-4 mr-2" />
+                          공유
+                        </Button>
+                        <Button 
+                          className="flex-1"
+                          onClick={() => {
+                            const link = document.createElement('a');
+                            link.href = item.resultImage.image_url;
+                            link.download = item.resultImage.filename;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            toast.success(`'${item.resultImage.filename}' 이미지가 저장되었습니다!`);
+                          }}
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          저장
+                        </Button>
+                      </DialogFooter>
                     </DialogContent>
                   </Dialog>
                   

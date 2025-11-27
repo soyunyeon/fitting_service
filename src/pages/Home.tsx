@@ -12,13 +12,14 @@ import {
   deletePhoto,
   getUploadedPersonPhotos,
   getUploadedClothPhotos,
+  getTryOnResults, // New import
 } from "../lib/api";
 
 interface TryOnHistory {
   id: string;
-  modelImage: string;
-  clothingImage: string;
-  resultImage: { filename: string; url: string };
+  modelImage?: string; // Made optional
+  clothingImage?: string; // Made optional
+  resultImage: { filename: string; image_url: string };
   timestamp: Date;
 }
 
@@ -34,7 +35,7 @@ export default function Home() {
 
   const [modelImage, setModelImage] = useState<string | null>(null);
   const [clothingImage, setClothingImage] = useState<string | null>(null);
-  const [resultImage, setResultImage] = useState<{ filename: string; url: string } | null>(null);
+  const [resultImage, setResultImage] = useState<{ filename: string; image_url: string } | null>(null);
 
   const [uploadedModels, setUploadedModels] = useState<UploadedItem[]>([]);
   const [uploadedClothes, setUploadedClothes] = useState<UploadedItem[]>([]);
@@ -43,39 +44,53 @@ export default function Home() {
   
   const [personPhotoId, setPersonPhotoId] = useState<number | null>(null);
   const [clothPhotoId, setClothPhotoId] = useState<number | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false); // New state variable
+  const [isGenerating, setIsGenerating] = useState(false);
 
-  // Fetch previously uploaded photos (persons and clothes)
+  // Fetch previously uploaded photos and history
   useEffect(() => {
     if (token) {
-      const fetchUploadedItems = async () => {
+      const fetchData = async () => {
         try {
           // Fetch person photos
           const personPhotos = await getUploadedPersonPhotos(token);
-          const models: UploadedItem[] = personPhotos.map(photo => ({
+          setUploadedModels(personPhotos.map(photo => ({
             id: photo.id,
             preview: photo.image_url, 
-          }));
-          setUploadedModels(models);
+          })));
 
           // Fetch cloth photos
           const clothPhotos = await getUploadedClothPhotos(token);
-          const clothes: UploadedItem[] = clothPhotos.map(photo => ({
+          setUploadedClothes(clothPhotos.map(photo => ({
             id: photo.id,
             preview: photo.image_url,
-          }));
-          setUploadedClothes(clothes);
+          })));
+
+          // Fetch try-on history
+          if (userId) {
+            const history = await getTryOnResults(userId, token);
+            const historyItems: TryOnHistory[] = history.map(item => ({
+              id: item.id.toString(),
+              resultImage: { 
+                filename: `result_${item.id}.png`, // Dummy filename if not provided
+                image_url: item.image_url 
+              },
+              timestamp: new Date(item.created_at || Date.now()),
+            }));
+            // Sort by newest first
+            setTryOnHistory(historyItems.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()));
+          }
 
         } catch (error) {
-          console.error("Failed to fetch uploaded photos:", error);
+          console.error("Failed to fetch user data:", error);
         }
       };
-      fetchUploadedItems();
+      fetchData();
     } else {
       setUploadedModels([]);
       setUploadedClothes([]);
+      setTryOnHistory([]);
     }
-  }, [token]);
+  }, [token, userId]);
 
 
   const handleModelUpload = async (file: File, preview: string) => {
@@ -188,7 +203,7 @@ export default function Home() {
           
           const resultObj = {
             filename: res.result_filename,
-            url: res.result_url || getResultImageUrl(res.result_filename)
+            image_url: res.result_url || getResultImageUrl(res.result_filename)
           };
           
           setResultImage(resultObj);

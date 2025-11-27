@@ -211,7 +211,25 @@ export async function getShopClothes(): Promise<ShopImageResponse[]> {
   return handleJson<ShopImageResponse[]>(res);
 }
 
-export function getShopClothImageUrl(filename: string): string {
-  return `${API_BASE_URL}/images/clothes/${encodeURIComponent(filename)}`;
+// ----- 시착 결과 목록 조회: /results/{user_id} -----
+export interface TryOnResultItem {
+  id: number;
+  user_id: number;
+  person_photo_id?: number;
+  cloth_photo_id?: number;
+  image_url: string;
+  created_at: string;
+}
+
+export async function getTryOnResults(
+  userId: number,
+  token: string
+): Promise<TryOnResultItem[]> {
+  const res = await fetch(`${API_BASE_URL}/results/${userId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return handleJson<TryOnResultItem[]>(res);
 }
 

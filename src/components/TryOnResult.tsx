@@ -6,19 +6,19 @@ import { useState } from 'react';
 
 interface TryOnHistory {
   id: string;
-  modelImage: string;
-  clothingImage: string;
-  resultImage: { filename: string; url: string };
+  modelImage?: string;
+  clothingImage?: string;
+  resultImage: { filename: string; image_url: string };
   timestamp: Date;
 }
 
 interface TryOnResultProps {
-  resultImage: { filename: string; url: string } | null;
+  resultImage: { filename: string; image_url: string } | null;
   onGenerate: () => void;
   hasRequiredImages: boolean;
   history: TryOnHistory[];
   onDeleteHistory: (id: string) => void;
-  isGenerating: boolean; // New prop
+  isGenerating: boolean;
 }
 
 export function TryOnResult({ resultImage, onGenerate, hasRequiredImages, history, onDeleteHistory, isGenerating }: TryOnResultProps) {
@@ -29,7 +29,7 @@ export function TryOnResult({ resultImage, onGenerate, hasRequiredImages, histor
   const handleDownload = () => {
     if (resultImage) {
       const link = document.createElement('a');
-      link.href = resultImage.url;
+      link.href = resultImage.image_url;
       link.download = resultImage.filename;
       document.body.appendChild(link);
       link.click();
@@ -51,7 +51,7 @@ export function TryOnResult({ resultImage, onGenerate, hasRequiredImages, histor
         {resultImage ? (
           <div className="flex justify-center items-center h-[400px] bg-gray-50 rounded-lg border-2 border-gray-300">
             <img 
-              src={resultImage.url} 
+              src={resultImage.image_url} 
               alt="Try-on result" 
               className="rounded-lg max-w-full max-h-full object-contain"
             />
@@ -116,42 +116,39 @@ export function TryOnResult({ resultImage, onGenerate, hasRequiredImages, histor
           </div>
           
           {history.length > 0 ? (
-            <div className="space-y-3 max-h-[300px] overflow-y-auto">
+            <div className="grid grid-cols-3 gap-2 max-h-[300px] overflow-y-auto p-1">
               {history.map((item) => (
                 <div 
                   key={item.id}
-                  className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow"
+                  className="relative group aspect-[3/4] rounded-lg overflow-hidden border border-gray-200 bg-white"
                 >
-                  <div className="flex gap-3 justify-center items-center">
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <div className="w-16 h-20 flex-shrink-0 border border-gray-200 rounded overflow-hidden cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all">
-                          <img 
-                          src={item.resultImage.url} 
-                            alt="Result" 
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-4xl">
-                        <img 
-                          src={item.resultImage.url} 
-                          alt="Result enlarged" 
-                          className="w-full h-auto object-contain max-h-[80vh]"
-                        />
-                      </DialogContent>
-                    </Dialog>
-                    <div className="flex-1 flex items-center justify-end">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onDeleteHistory(item.id)}
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <img 
+                        src={item.resultImage.image_url} 
+                        alt="Result" 
+                        className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                      />
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl">
+                      <img 
+                        src={item.resultImage.image_url} 
+                        alt="Result enlarged" 
+                        className="w-full h-auto object-contain max-h-[80vh]"
+                      />
+                    </DialogContent>
+                  </Dialog>
+                  
+                  {/* Delete Button Overlay */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteHistory(item.id);
+                    }}
+                    className="absolute top-1 right-1 p-1 bg-black/50 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
                 </div>
               ))}
             </div>

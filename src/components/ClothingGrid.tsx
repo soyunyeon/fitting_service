@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 
 export interface ClothingItem {
   id: string;
+  displayId?: string;
   productId?: number;
   name: string;
   category: string;
@@ -164,7 +165,7 @@ export function ClothingGrid({ selectedItems, onItemSelect, customItems }: Cloth
         
         return (
           <Card
-            key={item.id}
+            key={item.displayId || item.id}
             className={`cursor-pointer transition-all hover:shadow-md ${
               isSelected ? 'ring-2 ring-primary bg-primary/5' : ''
             }`}

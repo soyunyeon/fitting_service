@@ -1,16 +1,14 @@
-import React, {useEffect, useState, useMemo, use} from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { ClothingGrid, ClothingItem } from '../components/ClothingGrid';
 import { useAuthStore } from '../store/useAuthStore';
-import { 
-  getShopClothes, 
-  getShopClothImageUrl, 
-  requestTryon, 
-  getResultImageUrl, 
+import {
+  getShopClothes,
+  requestTryon,
+  getResultImageUrl,
   uploadPersonPhoto,
-  uploadClothPhoto
 } from '../lib/api';
 import { Button } from '../components/ui/button';
-import { Upload, User, Sparkles, Loader2, Shirt } from 'lucide-react';
+import { User, Sparkles, Loader2, Shirt } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogTrigger } from '../components/ui/dialog';
 import { Card } from '../components/ui/card';
@@ -20,16 +18,21 @@ export default function Shop() {
   const { token, userInfo } = useAuthStore();
   const userId = userInfo?.id ?? null;
 
-  // --- State ---
-  const [shopItems, setShopItems] = useState<ClothingItem[]>([]);
-  const [isLoadingItems, setIsLoadingItems] = useState(true);
+  // --- State for shop items and infinite scroll ---
+  const [allShopItems, setAllShopItems] = useState<ClothingItem[]>([]); // Source of truth (all fetched items)
+  const [displayedShopItems, setDisplayedShopItems] = useState<ClothingItem[]>([]); // Items currently rendered
+  const [isLoadingItems, setIsLoadingItems] = useState(true); // Initial load state
+  const [isLoadingMore, setIsLoadingMore] = useState(false); // Infinite scroll load state
+  
+  const itemsPerPage = 9; 
+  const observerTarget = useRef(null); 
 
   // Selection & TryOn State
   const [selectedClothing, setSelectedClothing] = useState<ClothingItem | null>(null);
   const [modelImage, setModelImage] = useState<string | null>(null);
   const [personPhotoId, setPersonPhotoId] = useState<number | null>(null);
   const [clothPhotoId, setClothPhotoId] = useState<number | null>(null);
-  
+
   const [isGenerating, setIsGenerating] = useState(false);
   const [resultImage, setResultImage] = useState<string | null>(null);
 
@@ -38,15 +41,15 @@ export default function Shop() {
     const fetchItems = async () => {
       try {
         const shopImages = await getShopClothes();
-        
+
         const items: ClothingItem[] = shopImages.map((image) => {
           let category = 'tops';
           const type = (image.fitting_type || '').toLowerCase();
-          
+
           if (type === 'lower' || type === 'bottom') category = 'bottoms';
           else if (type === 'shoes') category = 'shoes';
           else if (['bag', 'hat', 'accessory'].some(t => type.includes(t))) category = 'accessories';
-          
+
           return {
             id: image.id.toString(),
             name: `상품 #${image.id}`,
@@ -56,7 +59,16 @@ export default function Shop() {
             brand: 'Shop Item',
           };
         });
-        setShopItems(items);
+        
+        setAllShopItems(items);
+        
+        // Initial Display
+        const initialItems = items.slice(0, itemsPerPage).map((item, index) => ({
+            ...item,
+            displayId: `${item.id}-${index}`
+        }));
+        setDisplayedShopItems(initialItems);
+
       } catch (e) {
         console.error("Failed to fetch shop clothes:", e);
         toast.error("쇼핑몰 옷 목록을 불러오는데 실패했습니다.");
@@ -68,12 +80,64 @@ export default function Shop() {
     fetchItems();
   }, []);
 
+  // --- Looping Infinite Scroll Logic ---
+  const loadMoreItems = useCallback(() => {
+    if (isLoadingMore || allShopItems.length === 0) return;
+
+    setIsLoadingMore(true);
+
+    // Small delay to simulate loading and allow UI to update
+    setTimeout(() => {
+      setDisplayedShopItems(prev => {
+        const currentTotal = prev.length;
+        const nextItems = [];
+
+        for (let i = 0; i < itemsPerPage; i++) {
+          // Use modulus to loop back to the start of allShopItems
+          const sourceIndex = (currentTotal + i) % allShopItems.length;
+          const originalItem = allShopItems[sourceIndex];
+          
+          nextItems.push({
+            ...originalItem,
+            // Create a unique ID for the key prop to avoid collision
+            displayId: `${originalItem.id}-${currentTotal + i}`
+          });
+        }
+
+        return [...prev, ...nextItems];
+      });
+      setIsLoadingMore(false);
+    }, 600); 
+
+  }, [isLoadingMore, allShopItems]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isLoadingMore && !isLoadingItems) {
+          loadMoreItems();
+        }
+      },
+      { threshold: 0.1 } 
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => {
+      if (observerTarget.current) {
+        observer.unobserve(observerTarget.current);
+      }
+    };
+  }, [observerTarget, isLoadingMore, isLoadingItems, loadMoreItems]);
+
   // --- Handlers ---
 
   // 1. Select Clothing from Grid
   const handleSelectClothing = async (item: ClothingItem) => {
     setSelectedClothing(item);
-    setClothPhotoId(null); // Reset clothPhotoId, it will be uploaded during generation
+    setClothPhotoId(null); 
     toast.success("옷이 선택되었습니다.");
   };
 
@@ -109,8 +173,6 @@ export default function Shop() {
 
     setIsGenerating(true);
     try {
-      // Use the existing shop item ID directly instead of uploading
-      // Assuming the shop item ID is valid for the try-on API
       const currentClothPhotoId = Number(selectedClothing.id);
 
       if (!currentClothPhotoId || isNaN(currentClothPhotoId)) {
@@ -118,12 +180,6 @@ export default function Shop() {
         setIsGenerating(false);
         return;
       }
-
-      console.log("Requesting tryon with:", {
-        user_id: userId,
-        person_photo_id: personPhotoId,
-        cloth_photo_id: currentClothPhotoId
-      });
 
       const res = await requestTryon({
         user_id: userId,
@@ -147,10 +203,9 @@ export default function Shop() {
     <div className="min-h-screen bg-gray-50">
       <div className="pt-20 max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
+
         {/* --- Left Column: Shop Items (8 cols) --- */}
         <div className="lg:col-span-8 space-y-6">
-          
 
           {isLoadingItems ? (
             <div className="flex items-center justify-center h-[400px] bg-white rounded-lg border">
@@ -158,11 +213,23 @@ export default function Shop() {
               <span className="ml-2 text-gray-500">상품을 불러오는 중...</span>
             </div>
           ) : (
-            <ClothingGrid 
-              customItems={shopItems} 
-              selectedItems={selectedClothing ? [selectedClothing] : []}
-              onItemSelect={handleSelectClothing}
-            />
+            <>
+              <ClothingGrid
+                customItems={displayedShopItems}
+                selectedItems={selectedClothing ? [selectedClothing] : []}
+                onItemSelect={handleSelectClothing}
+              />
+              
+              {/* Sentinel for Infinite Scroll */}
+              <div ref={observerTarget} className="flex justify-center p-6">
+                {isLoadingMore && (
+                  <>
+                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                    <span className="ml-2 text-gray-500">더 많은 상품을 불러오는 중...</span>
+                  </>
+                )}
+              </div>
+            </>
           )}
         </div>
 
@@ -214,9 +281,9 @@ export default function Shop() {
               </div>
 
               {/* Action Button */}
-              <Button 
-                className="w-full mb-4" 
-                size="lg" 
+              <Button
+                className="w-full mb-4"
+                size="lg"
                 onClick={handleGenerate}
                 // disabled={isGenerating || !modelImage || !selectedClothing || !token}
               >
@@ -267,3 +334,4 @@ export default function Shop() {
     </div>
   );
 }
+
